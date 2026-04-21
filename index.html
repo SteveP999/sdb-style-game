@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDB Style Reveal Game</title>
+  <style>
+    :root{
+      --bg:#07111d;--panel:#0d1827;--panel2:#101d2f;--line:#1f3149;
+      --text:#eef4fb;--muted:#9fb0c7;--accent:#5b6cff;--green:#00a36c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at top,#10233b 0%,var(--bg) 45%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wrap{max-width:1240px;margin:0 auto;padding:24px}
+    .card{border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,var(--panel),var(--panel2));box-shadow:0 20px 60px rgba(0,0,0,.28);padding:24px;margin-bottom:20px}
+    .grid{display:grid;grid-template-columns:1.45fr .85fr;gap:20px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .intro-grid{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start}
+    @media (max-width:900px){.intro-grid{grid-template-columns:1fr}}
+    .badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+    .badge{display:inline-block;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700}
+    .green{background:#083f32;color:#8ff2cb}.gray{background:#1b2940;color:#dce6f5}.purple{background:#2a2480;color:#dfe0ff}
+    h1{margin:0 0 10px;font-size:48px;line-height:1.04} h2{margin:0 0 12px;font-size:28px} h3{margin:0 0 10px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    p{line-height:1.65}.muted{color:var(--muted)} .small{font-size:13px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    button{border:1px solid var(--line);background:#162338;color:var(--text);border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer;transition:.15s ease}
+    button:hover{transform:translateY(-1px);background:#1a2b45} button.primary{background:var(--accent);border-color:transparent} button.ghost{background:transparent} button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .panel{border:1px solid var(--line);border-radius:18px;background:#09121f;padding:16px}
+    .meta{display:flex;justify-content:space-between;gap:14px;align-items:start;flex-wrap:wrap}
+    .rank-chip{display:inline-block;padding:6px 10px;border-radius:999px;background:#12253b;color:#dce8ff;font-size:12px;font-weight:700}
+    .hidden{display:none !important} audio{width:100%}
+    .progress{width:100%;height:12px;background:#17253a;border-radius:999px;overflow:hidden}.progress > div{height:100%;background:linear-gradient(90deg,#5b6cff,#8897ff)}
+    .album-frame{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#09111d;min-height:300px;display:grid;place-items:center}
+    .album-frame img{width:100%;height:100%;object-fit:cover}
+    .script-box{border:1px solid var(--line);border-radius:20px;background:#09111d;padding:18px;min-height:300px}
+    .script-line{opacity:0;transform:translateY(10px);transition:.5s ease;line-height:1.7;margin-bottom:14px;color:#dfe8f6}.script-line.visible{opacity:1;transform:translateY(0)}
+    .intro-status{font-size:14px;color:var(--muted)} .intro-finished{display:none;margin-top:10px}.intro-finished.show{display:block}
+    .game-eyebrow{margin-bottom:10px;color:#9fb0c7;font-size:14px;letter-spacing:.16em;text-transform:uppercase}
+    .clue-card{border:1px solid var(--line);border-radius:16px;background:#101b2c;padding:14px;margin-top:12px}
+    .clue-title{font-weight:800;color:#dce6f5;margin-bottom:4px}.clue-countdown{font-size:13px;color:var(--muted);margin-bottom:10px;min-height:18px}.clue-text{min-height:42px;color:#eef4fb;line-height:1.55}
+    .placeholder{min-height:320px;border:1px dashed #375170;border-radius:18px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}
+    .reveal-wrap img{width:100%;height:250px;object-fit:cover;border-radius:16px;border:1px solid var(--line)}
+    .logo-wrap img{max-width:260px;max-height:120px;object-fit:contain;display:block}
+    .reveal-category{margin-top:20px;color:#9fb0c7;font-size:20px;line-height:1.45}
+    .reveal-answer{margin-top:14px;font-size:68px;font-weight:900;line-height:1.02;letter-spacing:-0.02em}
+    .reveal-actions{margin-top:18px;display:grid;gap:10px;justify-items:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section id="introSection" class="card">
+      <div class="badges"><span class="badge green">SDB Generation Project</span><span class="badge gray">Same Damn Song. New skins.</span></div>
+      <h1>Before the Game Begins</h1>
+      <p class="muted">The original plays here as the setup. Your story fades in over the track, then the game begins. There’s also a bypass button if the listener wants to skip straight to the rounds.</p>
+      <div class="intro-grid">
+        <div class="album-frame"><img id="introArt" alt="Original album art" /></div>
+        <div class="script-box">
+          <h3>Story Setup</h3>
+          <div id="scriptLines"></div>
+          <div class="intro-status" id="introStatus">Original intro idle.</div>
+          <div class="controls">
+            <button class="primary" id="playIntroBtn">Play Intro</button>
+            <button class="ghost" id="bypassIntroBtn">Bypass Original and Start Game</button>
+          </div>
+          <div id="introFinishedWrap" class="intro-finished"><button class="primary" id="beginAfterIntroBtn">Start Round</button></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px"><h3>Intro Player</h3><audio id="introAudio" controls></audio></div>
+    </section>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="badges"><span class="badge green">SDB Generation Project</span><span class="badge gray">Same Damn Song. New skins.</span><span class="badge purple" id="modeBadge">In the style of...</span></div>
+          <h1>Style Reveal Challenge</h1>
+          <p class="muted">Listen first, then let the clues tighten the net. The reveal stays locked until the countdown hits zero, unless you punch the early reveal button.</p>
+          <div class="controls">
+            <button class="primary" id="startRoundBtn">Start Round</button>
+            <button id="playOriginalBtn">Play Original Reference</button>
+            <button id="pauseBtn">Pause</button>
+            <button class="ghost" id="reshuffleBtn">Reshuffle</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="game-eyebrow">SAME DAMN BAND - In the style of...</div>
+          <div class="meta">
+            <div><h2 id="titleLine">Mystery track loaded</h2></div>
+            <div><span class="rank-chip" id="rankChip">Category hidden</span></div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <h3>Mystery Player</h3>
+            <audio id="mysteryAudio" controls></audio>
+            <div class="small muted" id="mysteryStatus">No round audio started yet.</div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <h3>Category</h3>
+            <div id="categoryPanelText" style="font-size:22px;line-height:1.45;color:#eef4fb;min-height:64px;">Hidden until reveal.</div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <h3>Round Progress</h3>
+            <div class="meta small muted"><span id="phaseLabel">Waiting to begin</span><span><span id="elapsedLabel">0</span>s</span></div>
+            <div class="progress" style="margin-top:10px"><div id="progressFill" style="width:0%"></div></div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px">
+            <div class="panel">
+              <h3>Hints</h3>
+              <div class="clue-card"><div class="clue-title">Clue 1 - Hard</div><div class="clue-countdown" id="hint1Countdown">Appears in 20s</div><div class="clue-text" id="hint1Text"></div></div>
+              <div class="clue-card"><div class="clue-title">Clue 2 - Medium</div><div class="clue-countdown" id="hint2Countdown">Appears in 40s</div><div class="clue-text" id="hint2Text"></div></div>
+              <div class="clue-card"><div class="clue-title">Clue 3 - You should get it</div><div class="clue-countdown" id="hint3Countdown">Appears in 50s</div><div class="clue-text" id="hint3Text"></div></div>
+            </div>
+
+            <div class="panel reveal-wrap">
+              <h3>Reveal</h3>
+              <div id="revealBoard" class="placeholder">
+                <div>
+                  <div>The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.</div>
+                  <div class="reveal-actions">
+                    <button id="revealEarlyBoxBtn">Reveal Early</button>
+                    <div class="small muted" id="revealCountdownText">Reveal in: 60s</div>
+                  </div>
+                </div>
+              </div>
+              <div id="nextAfterRevealWrap" class="hidden" style="margin-top:16px;">
+                <button class="primary" id="nextAfterRevealBtn">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2 style="font-size:24px">Why this exists</h2>
+          <p>The song stays the song. The costume changes. That’s the point.</p>
+          <p>You’re proving that a good song is a good song when it’s written well. Same lyrics. Different prompts. Different results.</p>
+        </div>
+        <div class="card">
+          <h2 style="font-size:24px">Ranking Guide</h2>
+          <p><strong>Category 1</strong> - Obvious</p>
+          <p><strong>Category 2</strong> - Yeah. That's Pretty Good!</p>
+          <p><strong>Category 3</strong> - I can hear it. I guess</p>
+          <p><strong>Category 4</strong> - Thank God for the clues! I'd have never known</p>
+          <p><strong>Category 5</strong> - What? That doesn't sound like them at all!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INTRO_AUDIO = "https://www.dropbox.com/scl/fi/emu7122b7nqxd9hz9v5c6/Same-Damn-Band-1.mp3?rlkey=7c9by9hu7rzss5b542nfq2dc9&raw=1";
+    const INTRO_START_TEXT_AT = 5, INTRO_SINGING_AT = 20, INTRO_DRUMS_AT = 42, INTRO_CHORUS_AT = 66, INTRO_END_AT = 90;
+    const CLUE_ONE_AT = 20, CLUE_TWO_AT = 40, CLUE_THREE_AT = 50, REVEAL_UNLOCK_AT = 60, AUTO_REVEAL_AT = 90;
+
+    const INTRO_SCRIPT = [
+      "Hello Texas started writing music in January 2026 after a phone conversation with Steve Peters and Stephen Bender.",
+      "This was the first song they wrote together with plans to get together and figure out how to play it on guitar.",
+      "But they found Artificial Intelligence and were able to elevate it much more quickly.",
+      "This is their story.",
+      "A good song is a good song when it's written well.",
+      "To prove it, we generated the same song with different styles.",
+      "This is how AI generates it. Same lyrics. Different prompts.",
+      "This is the results:"
+    ];
+
+    let tracks = [], queue = [], currentIndex = 0, elapsed = 0, introElapsed = 0, revealedEarly = false, phase = "idle";
+    let roundTimer = null, introTimer = null, fadeTimer = null;
+
+    const els = {
+      introSection: document.getElementById("introSection"),
+      introAudio: document.getElementById("introAudio"),
+      introArt: document.getElementById("introArt"),
+      introStatus: document.getElementById("introStatus"),
+      scriptLines: document.getElementById("scriptLines"),
+      playIntroBtn: document.getElementById("playIntroBtn"),
+      bypassIntroBtn: document.getElementById("bypassIntroBtn"),
+      beginAfterIntroBtn: document.getElementById("beginAfterIntroBtn"),
+      introFinishedWrap: document.getElementById("introFinishedWrap"),
+      modeBadge: document.getElementById("modeBadge"),
+      startRoundBtn: document.getElementById("startRoundBtn"),
+      playOriginalBtn: document.getElementById("playOriginalBtn"),
+      pauseBtn: document.getElementById("pauseBtn"),
+      reshuffleBtn: document.getElementById("reshuffleBtn"),
+      titleLine: document.getElementById("titleLine"),
+      rankChip: document.getElementById("rankChip"),
+      mysteryAudio: document.getElementById("mysteryAudio"),
+      mysteryStatus: document.getElementById("mysteryStatus"),
+      phaseLabel: document.getElementById("phaseLabel"),
+      elapsedLabel: document.getElementById("elapsedLabel"),
+      progressFill: document.getElementById("progressFill"),
+      categoryPanelText: document.getElementById("categoryPanelText"),
+      hint1Text: document.getElementById("hint1Text"),
+      hint2Text: document.getElementById("hint2Text"),
+      hint3Text: document.getElementById("hint3Text"),
+      hint1Countdown: document.getElementById("hint1Countdown"),
+      hint2Countdown: document.getElementById("hint2Countdown"),
+      hint3Countdown: document.getElementById("hint3Countdown"),
+      revealBoard: document.getElementById("revealBoard"),
+      revealEarlyBoxBtn: document.getElementById("revealEarlyBoxBtn"),
+      revealCountdownText: document.getElementById("revealCountdownText"),
+      nextAfterRevealWrap: document.getElementById("nextAfterRevealWrap"),
+      nextAfterRevealBtn: document.getElementById("nextAfterRevealBtn")
+    };
+
+    function shuffleArray(arr){ const copy=[...arr]; for(let i=copy.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; } return copy; }
+    function normalizeRank(track){ const raw=track.rankGroup ?? 3; const n=Number(raw); return Number.isFinite(n)&&n>=1&&n<=5 ? n : 3; }
+    function rankLabel(rank){
+      const labels={1:"Category 1 - Obvious",2:"Category 2 - Yeah. That's Pretty Good!",3:"Category 3 - I can hear it. I guess",4:"Category 4 - Thank God for the clues! I'd have never known",5:"Category 5 - What? That doesn't sound like them at all!"};
+      return labels[rank] || labels[3];
+    }
+    function buildRankQueue(inputTracks){
+      const grouped={1:[],2:[],3:[],4:[],5:[]};
+      inputTracks.forEach(track=>grouped[normalizeRank(track)].push(track));
+      Object.keys(grouped).forEach(key=>grouped[key]=shuffleArray(grouped[key]));
+      const result=[]; let stillHasTracks=true;
+      while(stillHasTracks){
+        stillHasTracks=false;
+        for(let rank=1;rank<=5;rank++){ if(grouped[rank].length>0){ result.push(grouped[rank].shift()); stillHasTracks=true; } }
+      }
+      return result;
+    }
+    function currentTrack(){ return queue[currentIndex] || tracks[0]; }
+    function introArtForTrack(track){ return track?.originalArt || track?.artistImage || ""; }
+    function clearRoundTimer(){ if(roundTimer){ clearInterval(roundTimer); roundTimer=null; } }
+    function clearIntroTimer(){ if(introTimer){ clearInterval(introTimer); introTimer=null; } }
+    function clearFadeTimer(){ if(fadeTimer){ clearInterval(fadeTimer); fadeTimer=null; } }
+
+    function fadeOutAudio(audio, duration=2500){
+      if(!audio || audio.paused) return;
+      clearFadeTimer();
+      const startVolume=audio.volume || 1, steps=20, stepTime=duration/steps; let currentStep=0;
+      fadeTimer=setInterval(()=>{
+        currentStep++;
+        const nextVolume=startVolume*(1-currentStep/steps);
+        audio.volume=Math.max(0,nextVolume);
+        if(currentStep>=steps){
+          clearFadeTimer();
+          audio.pause(); audio.currentTime=0; audio.volume=1;
+        }
+      }, stepTime);
+    }
+
+    function resetIntroVisuals(){
+      els.scriptLines.innerHTML=INTRO_SCRIPT.map(line=>`<div class="script-line">${line}</div>`).join("");
+      els.introFinishedWrap.classList.remove("show");
+    }
+
+    function revealIntroLines(){
+      const lines=Array.from(els.scriptLines.querySelectorAll(".script-line"));
+      if(introElapsed<INTRO_START_TEXT_AT) return;
+      const availableSeconds=INTRO_END_AT-INTRO_START_TEXT_AT;
+      const step=availableSeconds/INTRO_SCRIPT.length;
+      lines.forEach((lineEl,idx)=>{
+        const revealAt=INTRO_START_TEXT_AT+(step*idx);
+        if(introElapsed>=revealAt) lineEl.classList.add("visible");
+      });
+      if(introElapsed>=INTRO_SINGING_AT && introElapsed<INTRO_DRUMS_AT) els.introStatus.textContent="Verse has started.";
+      else if(introElapsed>=INTRO_DRUMS_AT && introElapsed<INTRO_CHORUS_AT) els.introStatus.textContent="Drums have kicked in.";
+      else if(introElapsed>=INTRO_CHORUS_AT && introElapsed<INTRO_END_AT) els.introStatus.textContent="Chorus is rolling. Intro is about to hand off to the game.";
+    }
+
+    function finishIntro(){
+      clearIntroTimer();
+      fadeOutAudio(els.introAudio,3000);
+      els.introStatus.textContent="Intro finished. Start the round when ready.";
+      els.introFinishedWrap.classList.add("show");
+    }
+
+    function startIntro(){
+      resetIntroVisuals(); introElapsed=0; clearIntroTimer(); clearFadeTimer();
+      const track=currentTrack(); els.introArt.src=introArtForTrack(track);
+      els.introAudio.src=INTRO_AUDIO; els.introAudio.currentTime=0; els.introAudio.volume=1;
+      els.introAudio.play().then(()=>{ els.introStatus.textContent="Playing original intro..."; }).catch(()=>{ els.introStatus.textContent="Intro failed to start."; });
+      introTimer=setInterval(()=>{ introElapsed++; revealIntroLines(); if(introElapsed>=INTRO_END_AT) finishIntro(); },1000);
+    }
+
+    function bypassIntro(){
+      clearIntroTimer(); fadeOutAudio(els.introAudio,1000); els.introStatus.textContent="Intro bypassed."; els.introFinishedWrap.classList.add("show"); startRound();
+    }
+
+    function bindRevealBoxButton(){
+      els.revealEarlyBoxBtn=document.getElementById("revealEarlyBoxBtn");
+      els.revealCountdownText=document.getElementById("revealCountdownText");
+      if(els.revealEarlyBoxBtn) els.revealEarlyBoxBtn.onclick=()=>revealRound(true);
+    }
+
+    function clearRoundUI(){
+      els.titleLine.textContent="Mystery track loaded";
+      const track=currentTrack(); const rank=track ? normalizeRank(track) : 3;
+      els.rankChip.textContent=rankLabel(rank);
+      els.categoryPanelText.textContent=rankLabel(rank);
+      els.hint1Text.textContent=""; els.hint2Text.textContent=""; els.hint3Text.textContent="";
+      els.hint1Countdown.textContent=`Appears in ${CLUE_ONE_AT}s`;
+      els.hint2Countdown.textContent=`Appears in ${CLUE_TWO_AT}s`;
+      els.hint3Countdown.textContent=`Appears in ${CLUE_THREE_AT}s`;
+      els.revealBoard.className="placeholder";
+      els.revealBoard.innerHTML=`<div><div>The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.</div><div class="reveal-actions"><button id="revealEarlyBoxBtn">Reveal Early</button><div class="small muted" id="revealCountdownText">Reveal in: ${REVEAL_UNLOCK_AT}s</div></div></div>`;
+      bindRevealBoxButton();
+      els.nextAfterRevealWrap.classList.add("hidden");
+    }
+
+    async function playMysteryRound(){
+      const track=currentTrack();
+      if(!track?.remixUrl){ els.mysteryStatus.textContent="Missing remix URL."; return; }
+      clearRoundTimer(); elapsed=0; revealedEarly=false; phase="remix"; clearRoundUI();
+      try{
+        els.mysteryAudio.pause(); els.mysteryAudio.currentTime=0; els.mysteryAudio.src=""; els.mysteryAudio.load();
+        els.mysteryAudio.src=track.remixUrl; els.mysteryAudio.currentTime=0;
+        els.mysteryStatus.textContent="Loading mystery remix...";
+        await els.mysteryAudio.play();
+        els.mysteryStatus.textContent="Playing mystery remix.";
+      }catch(_){ els.mysteryStatus.textContent="Audio failed to play mystery remix."; return; }
+      renderProgress();
+      roundTimer=setInterval(()=>{
+        elapsed++;
+        if(elapsed===CLUE_ONE_AT){ els.hint1Countdown.textContent=""; els.hint1Text.textContent=track?.hintList?.[0] || ""; }
+        if(elapsed===CLUE_TWO_AT){ els.hint2Countdown.textContent=""; els.hint2Text.textContent=track?.hintList?.[1] || ""; }
+        if(elapsed===CLUE_THREE_AT){ els.hint3Countdown.textContent=""; els.hint3Text.textContent=track?.hintList?.[2] || ""; }
+        if(elapsed>=AUTO_REVEAL_AT) revealRound(false);
+        renderProgress();
+      },1000);
+    }
+
+    function startRound(){
+      if(!els.introAudio.paused) fadeOutAudio(els.introAudio,1000);
+      els.introSection.classList.add("hidden");
+      playMysteryRound();
+    }
+
+    async function playOriginalReference(){
+      const track=currentTrack();
+      if(!track?.originalSnippetUrl) return;
+      try{ els.introAudio.src=track.originalSnippetUrl; els.introAudio.currentTime=0; await els.introAudio.play(); }catch(_){}
+    }
+
+    function revealRound(early=true){
+      const track=currentTrack(); const rank=normalizeRank(track);
+      phase="revealed"; revealedEarly=early; clearRoundTimer();
+      els.titleLine.textContent="Reveal";
+      els.rankChip.textContent=rankLabel(rank);
+      els.categoryPanelText.textContent=rankLabel(rank);
+      const imageHtml=track?.artistImage ? `<img src="${track.artistImage}" alt="${track.artistName || track.answer || ""}" />` : "";
+      const logoHtml=track?.logoImage ? `<div class="logo-wrap" style="margin-top:12px"><img src="${track.logoImage}" alt="logo" /></div>` : "";
+      const earlyHtml=revealedEarly ? `<div class="badge" style="margin-top:12px;background:#422006;color:#ffd59c">Revealed early</div>` : "";
+      els.revealBoard.className="reveal-wrap";
+      els.revealBoard.innerHTML=`<div class="panel"><div class="small muted">Category</div><div class="reveal-category">${rankLabel(rank)}</div></div><div class="panel" style="margin-top:12px"><div class="small muted">Band Name</div><div class="reveal-answer">${track?.answer || track?.artistName || ""}</div></div>${imageHtml}${logoHtml}${earlyHtml}`;
+      els.nextAfterRevealWrap.classList.remove("hidden");
+      renderProgress();
+    }
+
+    function nextTrack(){
+      clearRoundTimer();
+      els.mysteryAudio.pause();
+      els.mysteryAudio.currentTime=0;
+      els.mysteryAudio.src="";
+      els.mysteryAudio.load();
+      currentIndex++;
+      if(currentIndex>=queue.length) currentIndex=0;
+      phase="idle"; elapsed=0;
+      startRound();
+    }
+
+    function reshuffle(){
+      clearRoundTimer();
+      els.mysteryAudio.pause(); els.mysteryAudio.currentTime=0; els.mysteryAudio.src=""; els.mysteryAudio.load();
+      queue=buildRankQueue(tracks); currentIndex=0; phase="idle"; elapsed=0;
+      clearRoundUI(); renderProgress();
+    }
+
+    function pauseOrResumeMystery(){
+      if(!els.mysteryAudio.src) return;
+      if(els.mysteryAudio.paused){
+        els.mysteryAudio.play().then(()=>{
+          els.mysteryStatus.textContent="Playing mystery remix.";
+          if(phase==="remix" && !roundTimer){
+            roundTimer=setInterval(()=>{
+              elapsed++;
+              if(elapsed===CLUE_ONE_AT){ els.hint1Countdown.textContent=""; els.hint1Text.textContent=currentTrack()?.hintList?.[0] || ""; }
+              if(elapsed===CLUE_TWO_AT){ els.hint2Countdown.textContent=""; els.hint2Text.textContent=currentTrack()?.hintList?.[1] || ""; }
+              if(elapsed===CLUE_THREE_AT){ els.hint3Countdown.textContent=""; els.hint3Text.textContent=currentTrack()?.hintList?.[2] || ""; }
+              if(elapsed>=AUTO_REVEAL_AT) revealRound(false);
+              renderProgress();
+            },1000);
+          }
+        }).catch(()=>{ els.mysteryStatus.textContent="Resume failed."; });
+      } else {
+        els.mysteryAudio.pause(); clearRoundTimer(); els.mysteryStatus.textContent="Mystery remix paused.";
+      }
+    }
+
+    function renderProgress(){
+      els.phaseLabel.textContent=phase==="remix" ? "Mystery remix" : phase==="revealed" ? "Revealed" : "Waiting to begin";
+      els.elapsedLabel.textContent=String(elapsed);
+      els.progressFill.style.width=`${Math.min((elapsed/AUTO_REVEAL_AT)*100,100)}%`;
+      els.pauseBtn.textContent=els.mysteryAudio.paused ? "Resume" : "Pause";
+      if(phase!=="revealed"){
+        if(elapsed<CLUE_ONE_AT) els.hint1Countdown.textContent=`Appears in ${CLUE_ONE_AT-elapsed}s`;
+        if(elapsed<CLUE_TWO_AT) els.hint2Countdown.textContent=`Appears in ${CLUE_TWO_AT-elapsed}s`;
+        if(elapsed<CLUE_THREE_AT) els.hint3Countdown.textContent=`Appears in ${CLUE_THREE_AT-elapsed}s`;
+        if(els.revealCountdownText){
+          if(elapsed<REVEAL_UNLOCK_AT){
+            els.revealCountdownText.textContent=`Reveal in: ${REVEAL_UNLOCK_AT-elapsed}s`;
+            if(els.revealEarlyBoxBtn) els.revealEarlyBoxBtn.disabled=true;
+          } else {
+            els.revealCountdownText.textContent="Reveal unlocked";
+            if(els.revealEarlyBoxBtn) els.revealEarlyBoxBtn.disabled=false;
+          }
+        }
+      }
+    }
+
+    async function boot(){
+      try{
+        const res=await fetch("./tracks_updated.json",{cache:"no-store"});
+        if(!res.ok) throw new Error("No tracks file");
+        tracks=await res.json();
+      }catch(_){ tracks=[]; }
+      if(!Array.isArray(tracks) || !tracks.length) tracks=[];
+      queue=buildRankQueue(tracks);
+      if(!queue.length && tracks.length) queue=tracks.slice();
+      resetIntroVisuals();
+      clearRoundUI();
+      renderProgress();
+      const track=currentTrack();
+      if(track) els.introArt.src=introArtForTrack(track);
+    }
+
+    els.playIntroBtn.addEventListener("click", startIntro);
+    els.bypassIntroBtn.addEventListener("click", bypassIntro);
+    els.beginAfterIntroBtn.addEventListener("click", startRound);
+    els.startRoundBtn.addEventListener("click", startRound);
+    els.playOriginalBtn.addEventListener("click", playOriginalReference);
+    els.pauseBtn.addEventListener("click", pauseOrResumeMystery);
+    els.reshuffleBtn.addEventListener("click", reshuffle);
+    els.nextAfterRevealBtn.addEventListener("click", nextTrack);
+
+    els.mysteryAudio.addEventListener("canplay", ()=>{ if(phase==="remix") els.mysteryStatus.textContent="Mystery remix loaded and ready."; });
+    els.mysteryAudio.addEventListener("ended", ()=>{ clearRoundTimer(); els.mysteryStatus.textContent="Mystery remix ended."; });
+    els.mysteryAudio.addEventListener("error", ()=>{ els.mysteryStatus.textContent="Mystery remix audio error."; });
+    els.introAudio.addEventListener("error", ()=>{ els.introStatus.textContent="Intro audio error."; });
+
+    boot();
+  </script>
+</body>
+</html>
