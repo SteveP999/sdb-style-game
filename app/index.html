@@ -1,1 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDB Style Reveal Game</title>
+  <style>
+    body{background:#0b0f14;color:#fff;font-family:sans-serif;margin:0;padding:20px}
+    button{margin:5px;padding:10px;border-radius:8px;border:none;background:#333;color:#fff;cursor:pointer}
+    .primary{background:#4f46e5}
+    .card{background:#111;padding:20px;border-radius:12px;margin-bottom:20px}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+
+<h1>SDB Style Reveal Game</h1>
+
+<div class="card">
+  <button class="primary" onclick="startRound()">Start Round</button>
+  <button onclick="playOriginal()">Play Original</button>
+  <button onclick="reveal()">Reveal</button>
+  <button onclick="nextTrack()">Next</button>
+</div>
+
+<div class="card">
+  <h3 id="title">Mystery track loaded</h3>
+  <audio id="player" controls></audio>
+  <audio id="original" controls></audio>
+</div>
+
+<div class="card">
+  <h3>Hints</h3>
+  <div id="hints"></div>
+</div>
+
+<div class="card">
+  <h3>Reveal</h3>
+  <div id="answer"></div>
+</div>
+
+<script>
+let tracks = [];
+let index = 0;
+let timer;
+let elapsed = 0;
+
+fetch("tracks_updated.json")
+  .then(r => r.json())
+  .then(data => {
+    tracks = data;
+    console.log("Loaded", tracks.length);
+  });
+
+function current(){ return tracks[index]; }
+
+function startRound(){
+  const t = current();
+  if(!t) return;
+
+  document.getElementById("title").innerText = "Mystery track loaded";
+  document.getElementById("answer").innerText = "";
+  document.getElementById("hints").innerText = "";
+
+  const player = document.getElementById("player");
+  player.src = t.remixUrl;
+  player.play();
+
+  elapsed = 0;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    elapsed++;
+
+    if(elapsed === 6) addHint(t.hintList[0]);
+    if(elapsed === 14) addHint(t.hintList[1]);
+    if(elapsed === 22) addHint(t.hintList[2]);
+
+    if(elapsed === 60){
+      reveal();
+      clearInterval(timer);
+    }
+  },1000);
+}
+
+function addHint(text){
+  if(!text) return;
+  const div = document.createElement("div");
+  div.innerText = text;
+  document.getElementById("hints").appendChild(div);
+}
+
+function reveal(){
+  const t = current();
+  document.getElementById("title").innerText = t.title;
+  document.getElementById("answer").innerText = t.answer;
+}
+
+function playOriginal(){
+  const t = current();
+  const o = document.getElementById("original");
+  o.src = t.originalSnippetUrl;
+  o.play();
+}
+
+function nextTrack(){
+  index++;
+  if(index >= tracks.length) index = 0;
+  startRound();
+}
+</script>
+
+</body>
+</html>
 
