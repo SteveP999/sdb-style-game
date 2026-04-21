@@ -249,7 +249,7 @@
     function rankLabel(rank){ const labels={1:"Category 1 - Obvious",2:"Category 2 - Yeah. That's Pretty Good!",3:"Category 3 - I can hear it. I guess",4:"Category 4 - Thank God for the clues! I'd have never known",5:"Category 5 - What? That doesn't sound like them at all!"}; return labels[rank] || labels[3]; }
     function buildRankQueue(inputTracks){ const grouped={1:[],2:[],3:[],4:[],5:[]}; inputTracks.forEach(track=>grouped[normalizeRank(track)].push(track)); Object.keys(grouped).forEach(key=>grouped[key]=shuffleArray(grouped[key])); const result=[]; let stillHasTracks=true; while(stillHasTracks){ stillHasTracks=false; for(let rank=1;rank<=5;rank++){ if(grouped[rank].length>0){ result.push(grouped[rank].shift()); stillHasTracks=true; } } } return result; }
     function currentTrack(){ return queue[currentIndex] || tracks[0]; }
-    function introArtForTrack(track){ return "https://www.dropbox.com/scl/fi/jwz6casbkto7ts5cyrhp1/Hello-Texas-Same-Damn-Band-Cover-3000-x-3000.png?rlkey=5tgtgq7umeu5tqo5vk1kmlwy7&dl=0"; }
+    function introArtForTrack(track){ return "https://www.dropbox.com/scl/fi/jwz6casbkto7ts5cyrhp1/Hello-Texas-Same-Damn-Band-Cover-3000-x-3000.png?rlkey=5tgtgq7umeu5tqo5vk1kmlwy7&raw=1"; }
     function clearRoundTimer(){ if(roundTimer){ clearInterval(roundTimer); roundTimer=null; } }
     function clearIntroTimer(){ if(introTimer){ clearInterval(introTimer); introTimer=null; } }
     function clearFadeTimer(){ if(fadeTimer){ clearInterval(fadeTimer); fadeTimer=null; } }
