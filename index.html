@@ -75,7 +75,7 @@
       background:#12253b;
       color:#dce8ff;
       font-size:12px;
-      font-weight:700
+      font-weight:700;
     }
     .hidden{display:none !important}
     audio{width:100%}
@@ -124,20 +124,28 @@
       letter-spacing:.16em;
       text-transform:uppercase;
     }
-    .clue-grid{
-      display:grid;
-      grid-template-columns:220px 1fr;
-      gap:10px;
-      margin-top:14px;
-      align-items:start;
+    .clue-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#101b2c;
+      padding:14px;
+      margin-top:12px;
     }
-    .clue-left{
+    .clue-title{
       font-weight:800;
       color:#dce6f5;
+      margin-bottom:4px;
     }
-    .clue-right{
-      min-height:24px;
+    .clue-countdown{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:10px;
+      min-height:18px;
+    }
+    .clue-text{
+      min-height:42px;
       color:#eef4fb;
+      line-height:1.55;
     }
     .placeholder{
       min-height:320px;
@@ -170,7 +178,7 @@
     }
     .reveal-answer{
       margin-top:14px;
-      font-size:64px;
+      font-size:68px;
       font-weight:900;
       line-height:1.02;
       letter-spacing:-0.02em;
@@ -231,15 +239,13 @@
 
           <h1>Style Reveal Challenge</h1>
           <p class="muted">
-            One random version from group 1, then one from group 2, then 3, then 4, then 5.
-            Clue 1 appears at 20 seconds. Clue 2 at 40. Clue 3 at 50. Reveal unlocks at 60.
+            Listen first, then let the clues tighten the net. The reveal stays locked until the countdown hits zero, unless you punch the early reveal button.
           </p>
 
           <div class="controls">
             <button class="primary" id="startRoundBtn">Start Round</button>
             <button id="playOriginalBtn">Play Original Reference</button>
             <button id="pauseBtn">Pause</button>
-            <button id="revealBtn" disabled>Reveal</button>
             <button id="nextBtn">Next</button>
             <button class="ghost" id="reshuffleBtn">Reshuffle</button>
           </div>
@@ -264,9 +270,10 @@
           </div>
 
           <div class="panel" style="margin-top:16px">
-            <h3>Original Reference Player</h3>
-            <audio id="referenceAudio" controls></audio>
-            <div class="small muted" id="referenceStatus">Reference audio idle.</div>
+            <h3>Category</h3>
+            <div id="categoryPanelText" style="font-size:22px;line-height:1.45;color:#eef4fb;min-height:64px;">
+              Hidden until reveal.
+            </div>
           </div>
 
           <div class="panel" style="margin-top:16px">
@@ -284,26 +291,35 @@
             <div class="panel">
               <h3>Hints</h3>
 
-              <div class="clue-grid">
-                <div class="clue-left">Clue 1 - Hard</div>
-                <div class="clue-right" id="hint1Text"></div>
+              <div class="clue-card">
+                <div class="clue-title">Clue 1 - Hard</div>
+                <div class="clue-countdown" id="hint1Countdown">Appears in 20s</div>
+                <div class="clue-text" id="hint1Text"></div>
               </div>
 
-              <div class="clue-grid">
-                <div class="clue-left">Clue 2 - Medium</div>
-                <div class="clue-right" id="hint2Text"></div>
+              <div class="clue-card">
+                <div class="clue-title">Clue 2 - Medium</div>
+                <div class="clue-countdown" id="hint2Countdown">Appears in 40s</div>
+                <div class="clue-text" id="hint2Text"></div>
               </div>
 
-              <div class="clue-grid">
-                <div class="clue-left">Clue 3 - You should get it</div>
-                <div class="clue-right" id="hint3Text"></div>
+              <div class="clue-card">
+                <div class="clue-title">Clue 3 - You should get it</div>
+                <div class="clue-countdown" id="hint3Countdown">Appears in 50s</div>
+                <div class="clue-text" id="hint3Text"></div>
               </div>
             </div>
 
             <div class="panel reveal-wrap">
               <h3>Reveal</h3>
               <div id="revealBoard" class="placeholder">
-                The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.
+                <div>
+                  <div>The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.</div>
+                  <div style="margin-top:18px;display:grid;gap:10px;justify-items:center;">
+                    <button id="revealEarlyBoxBtn">Reveal Early</button>
+                    <div class="small muted" id="revealCountdownText">Reveal in: 60s</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -382,23 +398,28 @@
       startRoundBtn: document.getElementById("startRoundBtn"),
       playOriginalBtn: document.getElementById("playOriginalBtn"),
       pauseBtn: document.getElementById("pauseBtn"),
-      revealBtn: document.getElementById("revealBtn"),
       nextBtn: document.getElementById("nextBtn"),
       reshuffleBtn: document.getElementById("reshuffleBtn"),
 
       titleLine: document.getElementById("titleLine"),
       rankChip: document.getElementById("rankChip"),
       mysteryAudio: document.getElementById("mysteryAudio"),
-      referenceAudio: document.getElementById("referenceAudio"),
       mysteryStatus: document.getElementById("mysteryStatus"),
-      referenceStatus: document.getElementById("referenceStatus"),
       phaseLabel: document.getElementById("phaseLabel"),
       elapsedLabel: document.getElementById("elapsedLabel"),
       progressFill: document.getElementById("progressFill"),
+      categoryPanelText: document.getElementById("categoryPanelText"),
+
       hint1Text: document.getElementById("hint1Text"),
       hint2Text: document.getElementById("hint2Text"),
       hint3Text: document.getElementById("hint3Text"),
-      revealBoard: document.getElementById("revealBoard")
+      hint1Countdown: document.getElementById("hint1Countdown"),
+      hint2Countdown: document.getElementById("hint2Countdown"),
+      hint3Countdown: document.getElementById("hint3Countdown"),
+
+      revealBoard: document.getElementById("revealBoard"),
+      revealEarlyBoxBtn: document.getElementById("revealEarlyBoxBtn"),
+      revealCountdownText: document.getElementById("revealCountdownText")
     };
 
     function shuffleArray(arr) {
@@ -577,15 +598,39 @@
       startRound();
     }
 
+    function bindRevealBoxButton() {
+      els.revealEarlyBoxBtn = document.getElementById("revealEarlyBoxBtn");
+      els.revealCountdownText = document.getElementById("revealCountdownText");
+
+      if (els.revealEarlyBoxBtn) {
+        els.revealEarlyBoxBtn.onclick = () => revealRound(true);
+      }
+    }
+
     function clearRoundUI() {
       els.titleLine.textContent = "Mystery track loaded";
       els.rankChip.textContent = "Category hidden";
+      els.categoryPanelText.textContent = "Hidden until reveal.";
+
       els.hint1Text.textContent = "";
       els.hint2Text.textContent = "";
       els.hint3Text.textContent = "";
+
+      els.hint1Countdown.textContent = `Appears in ${CLUE_ONE_AT}s`;
+      els.hint2Countdown.textContent = `Appears in ${CLUE_TWO_AT}s`;
+      els.hint3Countdown.textContent = `Appears in ${CLUE_THREE_AT}s`;
+
       els.revealBoard.className = "placeholder";
-      els.revealBoard.innerHTML = "The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.";
-      els.revealBtn.disabled = true;
+      els.revealBoard.innerHTML = `
+        <div>
+          <div>The file name, artist, and answer stay hidden until the reveal unlocks or the timer expires.</div>
+          <div style="margin-top:18px;display:grid;gap:10px;justify-items:center;">
+            <button id="revealEarlyBoxBtn">Reveal Early</button>
+            <div class="small muted" id="revealCountdownText">Reveal in: ${REVEAL_UNLOCK_AT}s</div>
+          </div>
+        </div>
+      `;
+      bindRevealBoxButton();
     }
 
     async function playMysteryRound() {
@@ -616,11 +661,21 @@
       roundTimer = setInterval(() => {
         elapsed++;
 
-        if (elapsed === CLUE_ONE_AT) els.hint1Text.textContent = track?.hintList?.[0] || "";
-        if (elapsed === CLUE_TWO_AT) els.hint2Text.textContent = track?.hintList?.[1] || "";
-        if (elapsed === CLUE_THREE_AT) els.hint3Text.textContent = track?.hintList?.[2] || "";
-        if (elapsed === REVEAL_UNLOCK_AT) els.revealBtn.disabled = false;
-        if (elapsed >= AUTO_REVEAL_AT) revealRound(false);
+        if (elapsed === CLUE_ONE_AT) {
+          els.hint1Countdown.textContent = "";
+          els.hint1Text.textContent = track?.hintList?.[0] || "";
+        }
+        if (elapsed === CLUE_TWO_AT) {
+          els.hint2Countdown.textContent = "";
+          els.hint2Text.textContent = track?.hintList?.[1] || "";
+        }
+        if (elapsed === CLUE_THREE_AT) {
+          els.hint3Countdown.textContent = "";
+          els.hint3Text.textContent = track?.hintList?.[2] || "";
+        }
+        if (elapsed >= AUTO_REVEAL_AT) {
+          revealRound(false);
+        }
 
         renderProgress();
       }, 1000);
@@ -636,20 +691,13 @@
 
     async function playOriginalReference() {
       const track = currentTrack();
-      if (!track?.originalSnippetUrl) {
-        els.referenceStatus.textContent = "Missing original reference URL.";
-        return;
-      }
+      if (!track?.originalSnippetUrl) return;
 
       try {
-        els.referenceAudio.src = track.originalSnippetUrl;
-        els.referenceAudio.currentTime = 0;
-        els.referenceStatus.textContent = "Loading original reference...";
-        await els.referenceAudio.play();
-        els.referenceStatus.textContent = "Playing original reference.";
-      } catch (err) {
-        els.referenceStatus.textContent = "Reference failed to play.";
-      }
+        els.introAudio.src = track.originalSnippetUrl;
+        els.introAudio.currentTime = 0;
+        await els.introAudio.play();
+      } catch (_) {}
     }
 
     function revealRound(early = true) {
@@ -662,6 +710,7 @@
 
       els.titleLine.textContent = "Reveal";
       els.rankChip.textContent = rankLabel(rank);
+      els.categoryPanelText.textContent = rankLabel(rank);
 
       const imageHtml = track?.artistImage
         ? `<img src="${track.artistImage}" alt="${track.artistName || track.answer || ""}" />`
@@ -689,12 +738,6 @@
         ${logoHtml}
         ${earlyHtml}
       `;
-
-      els.hint1Text.textContent = track?.hintList?.[0] || "";
-      els.hint2Text.textContent = track?.hintList?.[1] || "";
-      els.hint3Text.textContent = track?.hintList?.[2] || "";
-
-      renderProgress();
     }
 
     function nextTrack() {
@@ -705,7 +748,6 @@
       if (currentIndex >= queue.length) currentIndex = 0;
       phase = "idle";
       elapsed = 0;
-      els.referenceStatus.textContent = "Reference audio idle.";
       clearRoundUI();
       renderProgress();
     }
@@ -718,7 +760,6 @@
       currentIndex = 0;
       phase = "idle";
       elapsed = 0;
-      els.referenceStatus.textContent = "Reference audio idle.";
       clearRoundUI();
       renderProgress();
     }
@@ -732,11 +773,21 @@
           if (phase === "remix" && !roundTimer) {
             roundTimer = setInterval(() => {
               elapsed++;
-              if (elapsed === CLUE_ONE_AT) els.hint1Text.textContent = currentTrack()?.hintList?.[0] || "";
-              if (elapsed === CLUE_TWO_AT) els.hint2Text.textContent = currentTrack()?.hintList?.[1] || "";
-              if (elapsed === CLUE_THREE_AT) els.hint3Text.textContent = currentTrack()?.hintList?.[2] || "";
-              if (elapsed === REVEAL_UNLOCK_AT) els.revealBtn.disabled = false;
+
+              if (elapsed === CLUE_ONE_AT) {
+                els.hint1Countdown.textContent = "";
+                els.hint1Text.textContent = currentTrack()?.hintList?.[0] || "";
+              }
+              if (elapsed === CLUE_TWO_AT) {
+                els.hint2Countdown.textContent = "";
+                els.hint2Text.textContent = currentTrack()?.hintList?.[1] || "";
+              }
+              if (elapsed === CLUE_THREE_AT) {
+                els.hint3Countdown.textContent = "";
+                els.hint3Text.textContent = currentTrack()?.hintList?.[2] || "";
+              }
               if (elapsed >= AUTO_REVEAL_AT) revealRound(false);
+
               renderProgress();
             }, 1000);
           }
@@ -759,6 +810,20 @@
       els.elapsedLabel.textContent = String(elapsed);
       els.progressFill.style.width = `${Math.min((elapsed / AUTO_REVEAL_AT) * 100, 100)}%`;
       els.pauseBtn.textContent = els.mysteryAudio.paused ? "Resume" : "Pause";
+
+      if (phase !== "revealed") {
+        if (elapsed < CLUE_ONE_AT) els.hint1Countdown.textContent = `Appears in ${CLUE_ONE_AT - elapsed}s`;
+        if (elapsed < CLUE_TWO_AT) els.hint2Countdown.textContent = `Appears in ${CLUE_TWO_AT - elapsed}s`;
+        if (elapsed < CLUE_THREE_AT) els.hint3Countdown.textContent = `Appears in ${CLUE_THREE_AT - elapsed}s`;
+
+        if (els.revealCountdownText) {
+          if (elapsed < REVEAL_UNLOCK_AT) {
+            els.revealCountdownText.textContent = `Reveal in: ${REVEAL_UNLOCK_AT - elapsed}s`;
+          } else {
+            els.revealCountdownText.textContent = "Reveal unlocked";
+          }
+        }
+      }
     }
 
     async function boot() {
@@ -791,7 +856,6 @@
     els.startRoundBtn.addEventListener("click", startRound);
     els.playOriginalBtn.addEventListener("click", playOriginalReference);
     els.pauseBtn.addEventListener("click", pauseOrResumeMystery);
-    els.revealBtn.addEventListener("click", () => revealRound(true));
     els.nextBtn.addEventListener("click", nextTrack);
     els.reshuffleBtn.addEventListener("click", reshuffle);
 
@@ -804,15 +868,6 @@
     });
     els.mysteryAudio.addEventListener("error", () => {
       els.mysteryStatus.textContent = "Mystery remix audio error.";
-    });
-    els.referenceAudio.addEventListener("canplay", () => {
-      els.referenceStatus.textContent = "Original reference loaded and ready.";
-    });
-    els.referenceAudio.addEventListener("ended", () => {
-      els.referenceStatus.textContent = "Original reference ended.";
-    });
-    els.referenceAudio.addEventListener("error", () => {
-      els.referenceStatus.textContent = "Original reference audio error.";
     });
     els.introAudio.addEventListener("error", () => {
       els.introStatus.textContent = "Intro audio error.";
